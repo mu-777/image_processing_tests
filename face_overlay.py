@@ -16,37 +16,31 @@ cascade_path = "./cascade/lbpcascade_animeface.xml"
 
 mask_img = cv2.imread("./test_imgs/matsuno_face.jpg")
 in_video_path = "./test_imgs/nanohaAs_promotion_video.mp4"
-out_video_path = "./test_imgs/output.m4v"
+out_video_path = "./test_imgs/output.avi"
 
 # カスケード分類器の特徴量を取得する
 cascade = cv2.CascadeClassifier(cascade_path)
 
-# 動画のエンコード　とりあえず、これで動く拡張子はm4vで
-fourcc = cv2.cv.CV_FOURCC('m', 'p', '4', 'v')
-# 動画ファイル読み込み
 cap = cv2.VideoCapture(in_video_path)
-
-out = cv2.VideoWriter(out_video_path, fourcc, 30.0, (640, 360))
+out = cv2.VideoWriter(filename=out_video_path, fourcc=0,
+                      fps=30.0, frameSize=(640, 360))
 
 frame_num = 0
-img_cnt = 0
 # フレームごとの処理
 while cap.isOpened():
     ret, frame = cap.read()
     if ret is False:
         break
+    frame_num += 1
+    print("frame : %d" % frame_num)
+
     gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
     faces = cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
-
-    print("frame : %d" % frame_num)
     if len(faces) > 0:
-        # 検出した顔を囲む矩形の作成
         for (x, y, w, h) in faces:
             resized_mask = cv2.resize(mask_img, tuple((w, h)))
             frame[y:y + h, x:x + w] = resized_mask[:, :]
-        img_cnt += 1
     out.write(frame)
-    frame_num += 1
 
 cap.release()
 cv2.destroyAllWindows()
