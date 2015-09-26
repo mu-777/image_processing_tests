@@ -1,30 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import sys
+# ref
+# http://qiita.com/kiyota-yoji/items/7fe134a64177ed708fdd
+# http://zbar.sourceforge.net/api/annotated.html
+
+import numpy as np
+import cv2
 import zbar
 import PIL.Image
 
-image_path = ''
+image_path = './test_imgs/DSC_0691.jpg'
+
+cv_img = cv2.imread(image_path)
+height, width = cv_img.shape[:2]
+gray_img = cv2.cvtColor(cv_img, cv2.COLOR_BGR2GRAY)
+raw = gray_img.tostring()
 
 scanner = zbar.ImageScanner()
-# configure the reader
 scanner.parse_config('enable')
 
-pil = PIL.Image.open(sys.argv[1]).convert('L')
-(width, height) = pil.size
-raw = pil.tostring()
-
-# wrap image data
 image = zbar.Image(width, height, 'Y800', raw)
-
-# scan the image for barcodes
 scanner.scan(image)
 
-# extract results
 for symbol in image:
     # do something useful with results
     print 'decoded', symbol.type, 'symbol', '"%s"' % symbol.data
 
-# clean up
 del (image)
