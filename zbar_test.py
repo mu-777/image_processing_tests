@@ -10,7 +10,9 @@ import cv2
 import zbar
 import PIL.Image
 
-image_path = './test_imgs/DSC_0691.jpg'
+# image_path = './test_imgs/theta_qr_test.jpg'
+# image_path = './test_imgs/DSC_0691.jpg'
+image_path = './test_imgs/qr7.jpg'
 
 cv_img = cv2.imread(image_path)
 height, width = cv_img.shape[:2]
@@ -24,6 +26,9 @@ image = zbar.Image(width, height, 'Y800', raw)
 scanner.scan(image)
 
 for symbol in image:
+    print(symbol.components, symbol.count,
+          symbol.data, symbol.location,
+          symbol.quality, symbol.type)
     # do something useful with results
     print 'decoded', symbol.type, 'symbol', '"%s"' % symbol.data
 

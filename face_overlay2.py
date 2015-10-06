@@ -8,7 +8,8 @@
 # マスクサンプル
 # http://tatabox.hatenablog.com/entry/2013/07/15/200232
 # http://blanktar.jp/blog/2015/02/python-opencv-realtime-lauhgingman.html
-
+# hadaninnsiki
+# http://parosky.net/note/20131211
 import cv2
 import time
 
@@ -40,7 +41,11 @@ while cap.isOpened():
     if len(faces) > 0:
         for (x, y, w, h) in faces:
             resized_mask = cv2.resize(mask_img, tuple((w, h)))
-            frame[y:y + h, x:x + w] = resized_mask[:, :]
+            for i, j in [(i, j) for i in range(h) for j in range(w)]:
+                r = frame[y + i, x + j, 0]
+                g = frame[y + i, x + j, 1]
+                b = frame[y + i, x + j, 2]
+                print(r, g, b)
     out.write(frame)
     if frame_num > 500:
         break
