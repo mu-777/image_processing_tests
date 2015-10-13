@@ -69,10 +69,4 @@ if len(faces) > 0:
         check_img(eroded)
         check_img(dilated)
 
-        gray = cv2.cvtColor(over_img_temp, cv2.COLOR_BGR2GRAY)
-        gray_smooth = cv2.GaussianBlur(gray, (31, 31), 0)
-        ret, th1 = cv2.threshold(gray_smooth, 130, 255, cv2.THRESH_BINARY)
-        contours, hierarchy = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(over_img_temp, contours, 0, overlay_color, thickness=5)
-
 cv2.imwrite(out_img_path, rgb_img)
