@@ -59,10 +59,11 @@ def check_img(img):
 if len(faces) > 0:
     # 検出した顔を囲む矩形の作成
     for (x, y, w, h) in faces:
-        over_img_temp = cutoff_rgb(x, y, w, h)
+        # over_img_temp = cutoff_rgb(x, y, w, h)
+        over_img_temp = cutoff_hsv(x, y, w, h)
         gray = cv2.cvtColor(over_img_temp, cv2.COLOR_BGR2GRAY)
-        gray_smooth = cv2.GaussianBlur(gray, (31, 31), 0)
-        ret, binary_img = cv2.threshold(gray_smooth, 130, 255, cv2.THRESH_BINARY)
+        gray_smooth = cv2.GaussianBlur(gray, (31, 31), 11)
+        ret, binary_img = cv2.threshold(gray_smooth, 20, 255, cv2.THRESH_BINARY)
         kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))
         dilated = cv2.dilate(binary_img, kernel)
         check_img(over_img_temp)
