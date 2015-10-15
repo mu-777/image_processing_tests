@@ -11,44 +11,11 @@ import cv2
 import numpy as np
 import time
 
-# カスケード分類器の特徴量を取得する
-cascade_path = "./cascade/lbpcascade_animeface.xml"
-cascade = cv2.CascadeClassifier(cascade_path)
+CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 
-in_img_path = "./test_imgs/face_detecting.png"
-over_img_path = "./test_imgs/face_up5.jpg"
-out_img_path = "./test_imgs/face_detecting_out.png"
-rgb_img = cv2.imread(in_img_path)
-over_img = cv2.imread(over_img_path)
-hsv_img = cv2.cvtColor(rgb_img, cv2.COLOR_BGR2HSV)
-
-overlay_color = (0, 187, 254)
-rect_color = (0, 0, 0)
-
-faces = cascade.detectMultiScale(cv2.cvtColor(rgb_img, cv2.COLOR_BGR2GRAY),
-                                 scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
-
-
-def cutoff_rgb(x, y, w, h):
-    diff_threshold = 20
-    over_img_temp = np.zeros((h, w, 3), np.uint8)
-    center_color = rgb_img[y + h / 2.0, x + w / 2.0]
-    for i, j in [(i, j) for i in range(h) for j in range(w)]:
-        color = rgb_img[y + i, x + j]
-        if all([abs(diff) < diff_threshold for diff in center_color - color]):
-            over_img_temp[i, j] = rgb_img[i + y, j + x]
-    return over_img_temp
-
-
-def cutoff_hsv(x, y, w, h):
-    diff_threshold = 6
-    over_img_temp = np.zeros((h, w, 3), np.uint8)
-    center_color = hsv_img[y + h / 2.0, x + w / 2.0]
-    for i, j in [(i, j) for i in range(h) for j in range(w)]:
-        color = hsv_img[y + i, x + j]
-        if all([abs(diff) < diff_threshold for diff in center_color - color]):
-            over_img_temp[i, j] = rgb_img[i + y, j + x]
-    return over_img_temp
+IN_IMG_PATHS = ["./test_imgs/face_detecting" + str(i + 1) + ".png" for i in range(9)]
+OVERLAY_IMG_PATH = "./test_imgs/face_up5.jpg"
+OUT_IMG_PATH = "./test_imgs/face_detecting_out.png"
 
 
 def check_img(img):
@@ -56,25 +23,40 @@ def check_img(img):
     cv2.waitKey(0)
 
 
-if len(faces) > 0:
-    # 検出した顔を囲む矩形の作成
+def main(i):
+    rgb_img = cv2.imread(IN_IMG_PATHS[i])
+    overlay_img = cv2.imread(OVERLAY_IMG_PATH)
+
+    cascade = cv2.CascadeClassifier(CASCADE_PATH)
+    faces = cascade.detectMultiScale(cv2.cvtColor(rgb_img, cv2.COLOR_BGR2GRAY),
+                                     scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
+    if len(faces) <= 0:
+        return
+
     for (x, y, w, h) in faces:
-        # over_img_temp = cutoff_rgb(x, y, w, h)
-        over_img_temp = cutoff_hsv(x, y, w, h)
-        gray = cv2.cvtColor(over_img_temp, cv2.COLOR_BGR2GRAY)
-        gray_smooth = cv2.GaussianBlur(gray, (31, 31), 11)
-        ret, binary_img = cv2.threshold(gray_smooth, 20, 255, cv2.THRESH_BINARY)
-        kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (25, 25))
-        dilated = cv2.dilate(binary_img, kernel)
-        check_img(over_img_temp)
-        check_img(gray_smooth)
-        check_img(binary_img)
-        check_img(dilated)
+        face_img = rgb_img[y:y + h, x:x + w]
+        gray_img = cv2.cvtColor(face_img, cv2.COLOR_BGR2GRAY)
+        print(w)
+        if w > 300:
+            gray_img = cv2.GaussianBlur(gray_img, (7, 7), 0)
+        elif w > 200:
+            gray_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
+        elif w > 100:
+            gray_img = cv2.GaussianBlur(gray_img, (3, 3), 0)
 
-        gray = cv2.cvtColor(over_img_temp, cv2.COLOR_BGR2GRAY)
-        gray_smooth = cv2.GaussianBlur(gray, (31, 31), 0)
-        ret, th1 = cv2.threshold(gray_smooth, 130, 255, cv2.THRESH_BINARY)
-        contours, hierarchy = cv2.findContours(th1, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-        cv2.drawContours(over_img_temp, contours, 0, overlay_color, thickness=5)
+        edge_img = cv2.Canny(gray_img, 0, 1500, apertureSize=5)
+        check_img(edge_img)
+        dilated_img = cv2.dilate(edge_img, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)), iterations=76)
+        check_img(dilated_img)
+        contours, hierarchy = cv2.findContours(dilated_img, cv2.RETR_EXTERNAL,
+                                               cv2.CHAIN_APPROX_SIMPLE)
+        c_len = len(contours)
+        for i, contour in enumerate(contours):
+            cv2.drawContours(face_img, [contour], -1, (0, 255 * float(i) / c_len, 0), thickness=-1)
+        check_img(face_img)
+        check_img(edge_img)
 
-cv2.imwrite(out_img_path, rgb_img)
+
+# --------------------
+for i in range(9):
+    main(i)
