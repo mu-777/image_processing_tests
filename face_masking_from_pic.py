@@ -57,8 +57,8 @@ def main(in_img_path):
         return
 
     for (x, y, w, h) in faces:
-        x, w = x - w * 0.3, w + w * 0.6
-        y, h = y - h * 0.3, h + h * 0.6
+        # x, w = x - w * 0.3, w + w * 0.6
+        # y, h = y - h * 0.3, h + h * 0.6
         face_img = rgb_img[y:y + h, x:x + w]
         bilat_blur_img = cv2.bilateralFilter(face_img, 50, 70, 30)
         # skin_img = cutoff_rgb(bilat_blur_img, diff_threshold=30)

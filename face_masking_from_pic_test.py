@@ -63,17 +63,19 @@ if len(faces) > 0:
         over_img_temp = rgb_img[y:y + h, x:x + w]
         gray = cv2.cvtColor(over_img_temp, cv2.COLOR_BGR2GRAY)
         gray_smooth = cv2.GaussianBlur(gray, (5, 5), 0)
-        edge_img = cv2.Canny(gray_smooth, 1000, 1500, apertureSize=5)
+        # edge_img = cv2.Canny(gray_smooth, 1000, 1500, apertureSize=5)
+        edge_img = cv2.Canny(gray_smooth, 1600, 1600, apertureSize=5)
         check_img(edge_img)
         dilated_img = cv2.dilate(edge_img, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)), iterations=3)
         check_img(dilated_img)
+        cv2.imwrite('./'+str(x)+'dilated_img.jpg', dilated_img)
         contours, hierarchy = cv2.findContours(dilated_img, cv2.RETR_EXTERNAL,
                                                cv2.CHAIN_APPROX_SIMPLE)
         c_len = len(contours)
         for i, contour in enumerate(contours):
             cv2.drawContours(over_img_temp, [contour], -1, (0, 255 * float(i) / c_len, 0), thickness=-1)
         check_img(over_img_temp)
-        check_img(gray_smooth)
+        cv2.imwrite('./'+str(x)+'over_img.jpg', over_img_temp)
 
 
         # contour_img = over_img_temp.copy()
@@ -115,4 +117,4 @@ if len(faces) > 0:
         # cv2.drawContours(over_img_temp, contours, 0, overlay_color, thickness=5)
         cv2.rectangle(rgb_img, (x, y), (x + w, y + h), (0, 187, 254), thickness=7)
 
-cv2.imwrite(out_img_path, rgb_img)
+# cv2.imwrite(out_img_path, rgb_img)
