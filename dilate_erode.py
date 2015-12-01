@@ -18,8 +18,9 @@ OVERLAY_IMG_PATH = "./test_imgs/face_up5.jpg"
 OUT_IMG_PATH = "./test_imgs/face_detecting_out.png"
 
 
-def check_img(img):
-    cv2.imshow('a', img)
+def check_img(img, title=None):
+    t = title if title is not None else 'a'
+    cv2.imshow(t, img)
     cv2.waitKey(0)
 
 
@@ -91,21 +92,23 @@ def main(in_img_path):
         # for i, contour in enumerate(contours):
         # cv2.drawContours(face_img, [contour], -1, (0, 255 * float(i) / c_len, 0), thickness=-1)
         # check_img(face_img)
-        check_img(bilat_blur_img)
+        check_img(bilat_blur_img, 'bilat_blur')
+
+        # http://opencv.jp/opencv-2svn/cpp/miscellaneous_image_transformations.html#cv-floodfill
         cv2.floodFill(bilat_blur_img, None,
                       (int(h / 2.0), int(w / 2.0)), (0, 0, 0),
                       loDiff=(3, 3, 3), upDiff=(5, 5, 5))
-        check_img(bilat_blur_img)
+        check_img(bilat_blur_img, 'bilat_blur')
         ret, th_img = cv2.threshold(bilat_blur_img, 1, 255, cv2.THRESH_BINARY_INV)
-        check_img(th_img)
+        check_img(th_img, 'th')
         dilated_img = cv2.dilate(th_img,
                                  cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8, 8)),
                                  iterations=5)
-        check_img(dilated_img)
+        check_img(dilated_img, 'dilated')
         eroded_img = cv2.erode(dilated_img,
                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)),
-                               iterations=5)
-        check_img(eroded_img)
+                               iterations=15)
+        check_img(eroded_img, 'eroded')
 
 # --------------------------------------------
 if __name__ == '__main__':
