@@ -71,12 +71,13 @@ def main(in_img_path):
             dilated_img = cv2.dilate(edge_img, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)), iterations=3)
             check_img(dilated_img)
             # cv2.imwrite('./'+str(x)+'dilated_img.jpg', dilated_img)
-            contours, hierarchy = cv2.findContours(dilated_img, cv2.RETR_EXTERNAL,
+            contours, hierarchy = cv2.findContours(dilated_img, cv2.RETR_TREE,
                                                    cv2.CHAIN_APPROX_SIMPLE)
             c_len = len(contours)
+            contours.reverse()
             for i, contour in enumerate(contours):
                 cv2.drawContours(over_img_temp, [contour], -1, (0, 255 * float(i) / c_len, 0), thickness=-1)
-            check_img(over_img_temp)
+                check_img(over_img_temp)
             # cv2.imwrite('./'+str(x)+'over_img.jpg', over_img_temp)
 
 

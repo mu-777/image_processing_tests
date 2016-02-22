@@ -47,6 +47,25 @@ def cutoff_rgb(src_img, diff_threshold=20):
     return ret_img
 
 
+def cutoff_edge(src_img):
+    gray = cv2.cvtColor(src_img, cv2.COLOR_BGR2GRAY)
+    gray_smooth = cv2.GaussianBlur(gray, (5, 5), 0)
+    # edge_img = cv2.Canny(gray_smooth, 1000, 1500, apertureSize=5)
+    edge_img = cv2.Canny(gray_smooth, 1600, 1600, apertureSize=5)
+    dilated_img = cv2.dilate(edge_img, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)),
+                             iterations=3)
+    return dilated_img
+
+
+def merge_monos(imgs):
+    (h, w) = imgs[0].shape[:2]
+    ret_img = np.zeros((h, w, 3), np.uint8)
+    for i, j in [(i, j) for i in range(h) for j in range(w)]:
+        color = (255, 255, 255) if any([any(img[i, j] > (0, 0, 0)) for img in imgs]) else (0, 0, 0)
+        ret_img[i, j] = color
+    return ret_img
+
+
 def main(in_img_path):
     rgb_img = cv2.imread(in_img_path)
     overlay_img = cv2.imread(OVERLAY_IMG_PATH)
@@ -61,25 +80,28 @@ def main(in_img_path):
         # x, w = x - w * 0.3, w + w * 0.6
         # y, h = y - h * 0.3, h + h * 0.6
         face_img = rgb_img[y:y + h, x:x + w]
+        if w < 100:
+            break
+        print(w)
         bilat_blur_img = cv2.bilateralFilter(face_img, 50, 70, 30)
-        # skin_img = cutoff_rgb(bilat_blur_img, diff_threshold=30)
-        # skin_img = cutoff_hsv(bilat_blur_img, diff_threshold=10)
-        # dilated_img = cv2.dilate(skin_img, cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8, 8)),
-        # iterations=1)
-        # check_img(face_img)
-        # check_img(bilat_blur_img)
-        # check_img(skin_img)
-        # check_img(dilated_img)
+
+        skin_img = cutoff_rgb(face_img, diff_threshold=30)
+        check_img(skin_img, 'rgb_cutoff')
+
+        skin_img = cutoff_hsv(face_img, diff_threshold=10)
+        check_img(skin_img, 'hsv_cutoff')
+
+        edged_img = cutoff_edge(bilat_blur_img)
+        check_img(edged_img, 'edged')
 
         gray_img = cv2.cvtColor(bilat_blur_img, cv2.COLOR_BGR2GRAY)
-        # print(w)
         # if w > 300:
         # gray_img = cv2.GaussianBlur(gray_img, (7, 7), 0)
         # elif w > 200:
         # gray_img = cv2.GaussianBlur(gray_img, (5, 5), 0)
         # elif w > 100:
         # gray_img = cv2.GaussianBlur(gray_img, (3, 3), 0)
-        #
+
         # edge_img = cv2.Canny(gray_img, 1000, 1500, apertureSize=5)
         # check_img(edge_img)
         # kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2))
@@ -99,16 +121,35 @@ def main(in_img_path):
                       (int(h / 2.0), int(w / 2.0)), (0, 0, 0),
                       loDiff=(3, 3, 3), upDiff=(5, 5, 5))
         check_img(bilat_blur_img, 'bilat_blur')
+
         ret, th_img = cv2.threshold(bilat_blur_img, 1, 255, cv2.THRESH_BINARY_INV)
         check_img(th_img, 'th')
+
+        merged_img = merge_monos([th_img, edged_img])
+        check_img(merged_img, 'merged')
+
+
+        dilated_img = cv2.dilate(merged_img,
+                                 cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)),
+                                 iterations=4)
+        check_img(dilated_img, 'merged_dilated')
+
+        eroded_img = cv2.erode(dilated_img,
+                               cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)),
+                               iterations=6)
+        check_img(eroded_img, 'merged_eroded')
+
+
         dilated_img = cv2.dilate(th_img,
                                  cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (8, 8)),
                                  iterations=5)
         check_img(dilated_img, 'dilated')
+
         eroded_img = cv2.erode(dilated_img,
                                cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (2, 2)),
                                iterations=15)
         check_img(eroded_img, 'eroded')
+
 
 # --------------------------------------------
 if __name__ == '__main__':
