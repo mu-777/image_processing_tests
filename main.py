@@ -18,6 +18,8 @@ IN_VIDEO_PATH = "./test_imgs/hirari-hitori-kirari.mp4"
 # IN_VIDEO_PATH = "./test_imgs/aikatsu_calendargirl_edited.mp4"
 OUT_VIDEO_PATH = "./test_imgs/output.avi"
 OVERLAY_IMG_PATH = "./test_imgs/face_up3.jpg"
+FRAME_SIZE = (1920, 1080)
+FPS = 30.0
 
 
 def check_img(img, title=None):
@@ -48,12 +50,31 @@ def cutoff_rgb(src_img, diff_threshold=20):
             ret_img[i, j] = src_img[i, j]
     return ret_img
 
+
 def is_skin(src_img):
-    (h, w) = src_img.shape[:2]
-    hsv_img = cv2.cvtColor(src_img, cv2.COLOR_BGR2HSV)
-    (center_h, center_s, center_v) = hsv_img[h / 2.0, w / 2.0]
+    px_size = 11
+    center_px = int((px_size + 1) / 2.0)
+    range_width = 0
+    center_range = range(center_px - range_width - 1, center_px + range_width)
+
+    shrinked_img = cv2.resize(src_img, tuple((px_size, px_size)))
+    hsv_img = cv2.cvtColor(shrinked_img, cv2.COLOR_BGR2HSV)
+
+    center_hsv = (0, 0, 0)
+    cnt = 0
+    for i, j in [(i, j) for i in center_range for j in center_range]:
+        cnt = cnt + 1
+        center_hsv = center_hsv + hsv_img[i, j]
+    if cnt != 0:
+        center_hsv = center_hsv / cnt
+
     # http://d.hatena.ne.jp/mintsu123/20111123/1322065624
-    return 0 <= center_h <= 22 or 158 <= center_h <= 180
+    h_flag = 0 <= center_hsv[0] <= 22 or 180 <= center_hsv[0] <= 180
+    s_flag = True
+    v_flag = True
+    return h_flag and s_flag and v_flag
+
+
 
 def get_alphachannel(face_img):
     (h, w) = face_img.shape[:2]
@@ -85,6 +106,7 @@ def get_alphachannel(face_img):
 def cv2pil(cv_img):
     return Image.fromarray(cv_img[::-1, :, ::-1])
 
+
 def fill_void(src_img):
     contours, hierarchy = cv2.findContours(src_img, cv2.RETR_TREE,
                                            cv2.CHAIN_APPROX_SIMPLE)
@@ -108,8 +130,7 @@ def overlay(rgb_img, overlay_img, cascade):
         if not is_skin(face_img):
             continue
 
-        alpha_channel = get_alphachannel(face_img)
-        alpha_channel = fill_void(alpha_channel)
+        alpha_channel = fill_void(get_alphachannel(face_img))
         resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
         mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
                                    mask=alpha_channel)
@@ -128,17 +149,17 @@ if __name__ == '__main__':
 
     cap = cv2.VideoCapture(IN_VIDEO_PATH)
     out = cv2.VideoWriter(filename=OUT_VIDEO_PATH, fourcc=0,
-                          fps=30.0, frameSize=(1920, 1080))
-    frame_num = 0
+                          fps=FPS, frameSize=FRAME_SIZE)
+    frame_idx = 0
 
     # フレームごとの処理
     while cap.isOpened():
         ret, frame = cap.read()
         if ret is False:
             break
-        frame_num += 1
-        if frame_num % 50 == 0:
-            print("frame : %d" % frame_num)
+        frame_idx += 1
+        if frame_idx % 50 == 0:
+            print("frame : %d" % frame_idx)
 
         overlayed_frame = overlay(frame, overlay_img, cascade)
         out.write(overlayed_frame)
