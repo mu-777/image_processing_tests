@@ -8,15 +8,15 @@
 
 
 import cv2
-from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin
+from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin, get_hair_color, hsv_to_bgr
 
 CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 
-IN_IMG_PATHS = ["./test_imgs/face_detecting" + str(i + 1) + ".png" for i in range(9)]
-# IN_IMG_PATHS = ["./test_imgs/hirari-hitori-kirari/face_detecting5.png"]
+# IN_IMG_PATHS = ["./test_imgs/face_detecting" + str(i + 1) + ".png" for i in range(9)]
+IN_IMG_PATHS = ["./test_imgs/hirari-hitori-kirari/face_detecting5.png"]
 OVERLAY_IMG_PATH = "./test_imgs/face_up3.jpg"
 OUT_IMG_PATH = "./test_imgs/faces/"
-CHECK_IMG_FLAG = True
+CHECK_IMG_FLAG = False
 
 
 def main(in_img_path):
@@ -36,25 +36,28 @@ def main(in_img_path):
         if not is_skin(face_img):
             continue
 
-        is_front_face(face_img)
+        color = hsv_to_bgr(get_hair_color(face_img))
+        # color = get_hair_color(face_img, is_hsv=False)
+        cv2.rectangle(rgb_img, (x, y), (x + w, y + h), color, thickness=7)
 
-        alpha_channel = get_alphachannel(face_img)
-        check_img(alpha_channel, 'alpha_channel', CHECK_IMG_FLAG, OUT_IMG_PATH)
-        alpha_channel = fill_void(alpha_channel)
+        # is_front_face(face_img)
+        #
+        # alpha_channel = get_alphachannel(face_img)
+        # check_img(alpha_channel, 'alpha_channel', CHECK_IMG_FLAG, OUT_IMG_PATH)
+        # alpha_channel = fill_void(alpha_channel)
+        #
+        # resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
+        # mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
+        #                            mask=alpha_channel)
+        # check_img(mask_img, 'mask_img', CHECK_IMG_FLAG, OUT_IMG_PATH)
+        # for i, j in [(i, j) for i in range(h) for j in range(w)]:
+        #     if any(mask_img[i, j]):
+        #         rgb_img[y + i, x + j] = mask_img[i, j]
 
-        resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
-        mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
-                                   mask=alpha_channel)
-        check_img(mask_img, 'mask_img', CHECK_IMG_FLAG, OUT_IMG_PATH)
-        for i, j in [(i, j) for i in range(h) for j in range(w)]:
-            if any(mask_img[i, j]):
-                rgb_img[y + i, x + j] = mask_img[i, j]
-
-        check_img(rgb_img, 'total', CHECK_IMG_FLAG, OUT_IMG_PATH)
+    check_img(rgb_img, 'total', True, OUT_IMG_PATH)
 
 
 # --------------------------------------------
 if __name__ == '__main__':
     for in_img_path in IN_IMG_PATHS:
         main(in_img_path)
-

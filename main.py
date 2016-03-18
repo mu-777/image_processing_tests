@@ -14,7 +14,8 @@ from frame_manager import FacesManager
 CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 # IN_VIDEO_PATH = "./test_imgs/nanohaAs_promotion_video.mp4"
 # IN_VIDEO_PATH = "./test_imgs/hirari-hitori-kirari.mp4"
-IN_VIDEO_PATH = "./test_imgs/aikatsu_calendargirl_edited.mp4"
+# IN_VIDEO_PATH = "./test_imgs/aikatsu_calendargirl_edited.mp4"
+IN_VIDEO_PATH = "./test_imgs/calendargirl_short.mp4"
 OUT_VIDEO_PATH = "./test_imgs/output.avi"
 OVERLAY_IMG_PATH = "./test_imgs/face_up3.jpg"
 FRAME_SIZE = (1920, 1080)
@@ -58,22 +59,28 @@ if __name__ == '__main__':
     faces_mgr = FacesManager()
 
     # フレームごとの処理
-    while cap.isOpened():
-        frame_idx += 1
-        if frame_idx % 50 == 0:
-            print("frame : %d" % frame_idx)
+    try:
+        while cap.isOpened():
+            frame_idx += 1
+            if frame_idx % 50 == 0:
+                print("frame : %d" % frame_idx)
 
-        ret, frame = cap.read()
-        if ret is False:
-            print('false')
-            out.write(frame)
-            continue
-        faces = cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY),
-                                         scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
-        faces = faces_mgr.append(faces).get_faces()
-        overlayed_frame = overlay(faces, frame, overlay_img, cascade)
-        out.write(overlayed_frame)
+            ret, frame = cap.read()
+            # if ret is False:
+            #     print('false')
+            #     out.write(frame)
+            #     continue
+            faces = cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY),
+                                             scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
+            faces = faces_mgr.append(faces).get_faces()
+            overlayed_frame = overlay(faces, frame, overlay_img, cascade)
+            out.write(overlayed_frame)
 
-    cap.release()
-    cv2.destroyAllWindows()
-    out.release()
+            if frame_idx > 350:
+                break
+    except:
+        pass
+    else:
+        cap.release()
+        cv2.destroyAllWindows()
+        out.release()

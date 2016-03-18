@@ -108,6 +108,7 @@ def fill_void(src_img):
 
 
 def is_front_face(face_img):
+    # TODO: UPDATE
     px_size = 11
     shrinked_img = cv2.resize(face_img, tuple((px_size, px_size)))
     check_img(shrinked_img, 'shrinked_img')
@@ -120,3 +121,41 @@ def is_front_face(face_img):
     print(top_hsv[0], bottom_hsv[0], left_hsv[0], right_hsv[0])
 
     return True
+
+
+def get_hair_color(face_img, is_hsv=True):
+    u"""
+    上から1/4のところの行の平均色を返す
+    :param face_img:
+    :param is_hsv:
+    :return:
+    """
+    px_size = 21
+    center_px = int((px_size + 1) / 2.0)
+    hair_line_px = int((px_size + 1) / 6) - 1
+    hair_line_px = 1
+    img = cv2.resize(face_img, tuple((px_size, px_size)))
+    if is_hsv:
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+
+    hair_line = img[hair_line_px, :]
+    ave_color = map(int, tuple(map(np.median, zip(*hair_line))))
+    return tuple(ave_color)
+
+
+def hsv_to_bgr(hsv):
+    h, s, v = hsv
+    bgr = cv2.cvtColor(np.array([[[h, s, v]]], dtype=np.uint8), cv2.COLOR_HSV2BGR)[0][0]
+    return np.array((int(bgr[0]), int(bgr[1]), int(bgr[2])))
+
+
+def rgb_to_hsv(rgb):
+    r, g, b = rgb
+    hsv = cv2.cvtColor(np.array([[[b, g, r]]], dtype=np.uint8), cv2.COLOR_BGR2HSV)[0][0]
+    return np.array((int(hsv[0]), int(hsv[1]), int(hsv[2])))
+
+
+def bgr_to_hsv(bgr):
+    b, g, r = bgr
+    hsv = cv2.cvtColor(np.array([[[b, g, r]]], dtype=np.uint8), cv2.COLOR_BGR2HSV)[0][0]
+    return np.array((int(hsv[0]), int(hsv[1]), int(hsv[2])))

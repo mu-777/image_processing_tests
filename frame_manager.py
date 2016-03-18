@@ -10,7 +10,7 @@ class FaceManager(object):
         (x, y, w, h) = face
         self.center_x = x + int(w / 2)
         self.center_y = y + int(h / 2)
-        self.face_size = np.sqrt(w ** 2 + h ** 2)
+        self.size = np.sqrt(w ** 2 + h ** 2)
         self.x = x
         self.y = y
         self.w = w
@@ -20,18 +20,32 @@ class FaceManager(object):
         def calc_diff(face1, face2):
             return np.sqrt((face1.center_x - face2.center_x) ** 2 + (face1.center_y - face2.center_y) ** 2)
 
+        if len(face_mgrs) == 0:
+            return None
+
         diffs = [calc_diff(self, face) for face in face_mgrs]
         min_diff = min(diffs)
         min_idx = diffs.index(min_diff)
-        if min_diff < self.face_size * allowed_rate:
-            return face_mgrs[min_idx]
+        min_face_mgr = face_mgrs[min_idx]
+
+        is_center_close = min_diff < self.size * allowed_rate
+        is_size_close = abs(min_face_mgr.size - self.size) < self.size * allowed_rate
+
+        if is_center_close and is_size_close:
+            return min_face_mgr
+        else:
+            return None
 
     def average(self, face_mgr):
-        x = (self.x + face_mgr.x) / 2.0
-        y = (self.y + face_mgr.y) / 2.0
-        w = (self.w + face_mgr.w) / 2.0
-        h = (self.h + face_mgr.h) / 2.0
+        x = int((self.x + face_mgr.x) / 2.0)
+        y = int((self.y + face_mgr.y) / 2.0)
+        w = int((self.w + face_mgr.w) / 2.0)
+        h = int((self.h + face_mgr.h) / 2.0)
         return FaceManager((x, y, w, h))
+
+    @property
+    def face(self):
+        return int(self.x), int(self.y), int(self.w), int(self.h)
 
 
 class FacesManager(object):
@@ -53,7 +67,8 @@ class FacesManager(object):
 
     def get_faces(self):
         continuous_faces = self._get_continuous_faces()
-        return self._added_faces(continuous_faces)
+        updated_faces = self._added_faces(continuous_faces)
+        return [updated_face.face for updated_face in updated_faces]
 
     def _set_faces(self, faces):
         ret_list = []
@@ -73,5 +88,6 @@ class FacesManager(object):
         for face in faces:
             same_face = face.get_same_face(self._center_frame_faces)
             if same_face is None:
+                print("interpolate!")
                 self._center_frame_faces.append(face)
         return self._center_frame_faces
