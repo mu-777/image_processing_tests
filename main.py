@@ -8,22 +8,39 @@
 
 
 import cv2
-from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin
+from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin, get_hair_color_hsv
 from frame_manager import FacesManager
+from aikatsu_charactors_detection import detect_aikatsu_charactors, AIKATSU_NAMES
 
 CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 # IN_VIDEO_PATH = "./test_imgs/nanohaAs_promotion_video.mp4"
-# IN_VIDEO_PATH = "./test_imgs/hirari-hitori-kirari.mp4"
+IN_VIDEO_PATH = "./test_imgs/hirari-hitori-kirari.mp4"
 # IN_VIDEO_PATH = "./test_imgs/aikatsu_calendargirl_edited.mp4"
-IN_VIDEO_PATH = "./test_imgs/calendargirl_short.mp4"
+# IN_VIDEO_PATH = "./test_imgs/calendargirl_short.mp4"
 OUT_VIDEO_PATH = "./test_imgs/output.avi"
 OVERLAY_IMG_PATH = "./test_imgs/face_up3.jpg"
 FRAME_SIZE = (1920, 1080)
 FPS = 30.0
 CHECK_IMG_FLAG = False
 
+OVERLAY_IMG_MAP = {
+    AIKATSU_NAMES[0]: cv2.imread("./test_imgs/overlays/murata.jpg", -1),
+    AIKATSU_NAMES[1]: cv2.imread("./test_imgs/overlays/ambe.jpg", -1),
+    AIKATSU_NAMES[2]: cv2.imread("./test_imgs/overlays/kon.jpg", -1),
+    AIKATSU_NAMES[3]: cv2.imread("./test_imgs/overlays/matsuno.jpg", -1),
+    AIKATSU_NAMES[4]: cv2.imread("./test_imgs/overlays/fukushima.jpg", -1),
+    AIKATSU_NAMES[5]: cv2.imread("./test_imgs/overlays/kato.jpg", -1),
+    AIKATSU_NAMES[6]: cv2.imread("./test_imgs/overlays/konishi.jpg", -1),
+    AIKATSU_NAMES[7]: cv2.imread("./test_imgs/overlays/ota.jpg", -1)
+}
 
-def overlay(faces, rgb_img, overlay_img, cascade):
+
+def switch_overlay_img(face_img):
+    name, hsv = detect_aikatsu_charactors['anime_based']['bgr_diff'](get_hair_color_hsv(face_img))
+    return OVERLAY_IMG_MAP[name]
+    # return cv2.imread("./test_imgs/overlays/kon.jpg", -1)
+
+def overlay(faces, rgb_img, cascade):
     if len(faces) <= 0:
         return rgb_img
 
@@ -31,12 +48,12 @@ def overlay(faces, rgb_img, overlay_img, cascade):
         face_img = rgb_img[y:y + h, x:x + w]
         # if w < 40:
         #     continue
-
         if not is_skin(face_img):
             continue
 
-        alpha_channel = fill_void(get_alphachannel(face_img))
+        overlay_img = switch_overlay_img(face_img)
         resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
+        alpha_channel = fill_void(get_alphachannel(face_img))
         mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
                                    mask=alpha_channel)
         for i, j in [(i, j) for i in range(h) for j in range(w)]:
@@ -49,7 +66,6 @@ def overlay(faces, rgb_img, overlay_img, cascade):
 # --------------------------------------------
 if __name__ == '__main__':
 
-    overlay_img = cv2.imread(OVERLAY_IMG_PATH, -1)
     cascade = cv2.CascadeClassifier(CASCADE_PATH)
 
     cap = cv2.VideoCapture(IN_VIDEO_PATH)
@@ -58,7 +74,6 @@ if __name__ == '__main__':
     frame_idx = 0
     faces_mgr = FacesManager()
 
-    # フレームごとの処理
     try:
         while cap.isOpened():
             frame_idx += 1
@@ -73,11 +88,8 @@ if __name__ == '__main__':
             faces = cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY),
                                              scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
             faces = faces_mgr.append(faces).get_faces()
-            overlayed_frame = overlay(faces, frame, overlay_img, cascade)
+            overlayed_frame = overlay(faces, frame, cascade)
             out.write(overlayed_frame)
-
-            if frame_idx > 350:
-                break
     except:
         pass
     else:

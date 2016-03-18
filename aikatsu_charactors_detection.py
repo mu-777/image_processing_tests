@@ -3,28 +3,38 @@
 import numpy as np
 from functions import hsv_to_bgr, bgr_to_hsv
 
-# BGR
+AIKATSU_NAMES = [
+    "ICHIGO",
+    "AOI",
+    "RAN",
+    "MIZUKI",
+    "OTOME",
+    "YURIKA",
+    "SAKURA",
+    "KAEDE"
+]
 
+# BGR
 AIKATSU_ANIME_HAIRS = {
-    "ICHIGO": (123, 235, 255),
-    "AOI": (174, 77, 57),
-    "RAN": (57, 63, 140),
-    "MIZUKI": (212, 112, 194),
-    "OTOME": (43, 138, 218),
-    "YURIKA": (215, 236, 233),
-    "SAKURA": (192, 169, 254),
-    "KAEDE": (62, 44, 197)
+    AIKATSU_NAMES[0]: (123, 235, 255),
+    AIKATSU_NAMES[1]: (174, 77, 57),
+    AIKATSU_NAMES[2]: (57, 63, 140),
+    AIKATSU_NAMES[3]: (212, 112, 194),
+    AIKATSU_NAMES[4]: (43, 138, 218),
+    AIKATSU_NAMES[5]: (215, 236, 233),
+    AIKATSU_NAMES[6]: (192, 169, 254),
+    AIKATSU_NAMES[7]: (62, 44, 197)
 }
 
 AIKATSU_MODEL_HAIRS = {
-    "ICHIGO": (145, 228, 228),
-    "AOI": (174, 88, 80),
-    "RAN": (75, 76, 134),
-    "MIZUKI": (211, 125, 197),
-    "OTOME": (59, 156, 228),
-    "YURIKA": (243, 255, 255),
-    "SAKURA": (207, 184, 238),
-    "KAEDE": (78, 60, 203)
+    AIKATSU_NAMES[0]: (145, 228, 228),
+    AIKATSU_NAMES[1]: (174, 88, 80),
+    AIKATSU_NAMES[2]: (75, 76, 134),
+    AIKATSU_NAMES[3]: (211, 125, 197),
+    AIKATSU_NAMES[4]: (59, 156, 228),
+    AIKATSU_NAMES[5]: (243, 255, 255),
+    AIKATSU_NAMES[6]: (207, 184, 238),
+    AIKATSU_NAMES[7]: (78, 60, 203)
 }
 
 
@@ -40,7 +50,7 @@ def detect_h_diff(ref_hair_color_map):
                 min_h = diff
                 min_hsv = hair_hsv
                 min_name = name
-        return min_hsv, min_name
+        return min_name, min_hsv
 
     return func
 
@@ -59,7 +69,7 @@ def detect_bgr_diff(ref_hair_color_map):
                 min_diff = diff
                 min_bgr = hair_bgr
                 min_name = name
-        return bgr_to_hsv(min_bgr), min_name
+        return min_name, bgr_to_hsv(min_bgr)
 
     return func
 
@@ -78,7 +88,7 @@ def detect_hsv_diff(ref_hair_color_map):
                 min_diff = diff
                 min_hsv = hair_hsv
                 min_name = name
-        return min_hsv, min_name
+        return min_name, min_hsv
 
     return func
 
@@ -99,7 +109,7 @@ if __name__ == '__main__':
 
     import cv2
     import numpy as np
-    from functions import check_img, is_skin, get_hair_color, hsv_to_bgr, bgr_to_hsv
+    from functions import check_img, is_skin, get_hair_color_hsv, hsv_to_bgr, bgr_to_hsv
 
     CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 
@@ -127,8 +137,8 @@ if __name__ == '__main__':
             if not is_skin(face_img):
                 continue
 
-            # color = hsv_to_bgr(get_hair_color(face_img))
-            hsv, name = detect_aikatsu_charactors['anime_based']['bgr_diff'](get_hair_color(face_img))
+            # color = hsv_to_bgr(get_hair_color_hsv(face_img))
+            name, hsv = detect_aikatsu_charactors['anime_based']['bgr_diff'](get_hair_color_hsv(face_img))
             color = hsv_to_bgr(hsv)
             cv2.rectangle(rgb_img, (x, y), (x + w, y + h), color, thickness=7)
 

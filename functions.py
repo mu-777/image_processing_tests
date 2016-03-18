@@ -3,6 +3,7 @@
 
 import cv2
 import numpy as np
+from scipy import stats
 from datetime import datetime
 from PIL import Image
 
@@ -123,25 +124,40 @@ def is_front_face(face_img):
     return True
 
 
-def get_hair_color(face_img, is_hsv=True):
-    u"""
-    上から1/4のところの行の平均色を返す
-    :param face_img:
-    :param is_hsv:
-    :return:
-    """
-    px_size = 21
+def get_hair_color_hsv(face_img):
+    def h_median():
+        hair_line = img[hair_line_px, :]
+        h_list = [px[0] for px in hair_line]
+        median_h = np.median(h_list)
+        median_idx = h_list.index(median_h)
+        return img[hair_line_px, median_idx]
+
+    def h_mode():
+        hair_line = img[hair_line_px, :]
+        h_list = [px[0] for px in hair_line]
+        mode_h = stats.mode(h_list)[0]
+        mode_idx = h_list.index(mode_h)
+        return img[hair_line_px, mode_idx]
+
+    def hsv_median():
+        hair_line = img[hair_line_px, :]
+        ave_color = map(int, tuple(map(np.median, zip(*hair_line))))
+        return tuple(ave_color)
+
+    def hsv_mode():
+        hair_line = img[hair_line_px, :]
+        print(stats.mode(hair_line)[0][0])
+        ave_color = map(int, stats.mode(hair_line)[0][0])
+        return tuple(ave_color)
+
+    px_size = 11
     center_px = int((px_size + 1) / 2.0)
     hair_line_px = int((px_size + 1) / 6) - 1
-    hair_line_px = 1
-    img = cv2.resize(face_img, tuple((px_size, px_size)))
-    if is_hsv:
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    hair_line_px = 0
+    face_img = cv2.resize(face_img, tuple((px_size, px_size)))
+    img = cv2.cvtColor(face_img, cv2.COLOR_BGR2HSV)
 
-    hair_line = img[hair_line_px, :]
-    ave_color = map(int, tuple(map(np.median, zip(*hair_line))))
-    return tuple(ave_color)
-
+    return h_mode()
 
 def hsv_to_bgr(hsv):
     h, s, v = hsv

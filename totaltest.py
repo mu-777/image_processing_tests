@@ -8,7 +8,7 @@
 
 
 import cv2
-from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin, get_hair_color, hsv_to_bgr
+from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin, get_hair_color_hsv, hsv_to_bgr
 
 CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 
@@ -36,8 +36,8 @@ def main(in_img_path):
         if not is_skin(face_img):
             continue
 
-        color = hsv_to_bgr(get_hair_color(face_img))
-        # color = get_hair_color(face_img, is_hsv=False)
+        color = hsv_to_bgr(get_hair_color_hsv(face_img))
+        # color = get_hair_color_hsv(face_img, is_hsv=False)
         cv2.rectangle(rgb_img, (x, y), (x + w, y + h), color, thickness=7)
 
         # is_front_face(face_img)
