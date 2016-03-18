@@ -11,12 +11,14 @@ import cv2
 import time
 
 # カスケード分類器の特徴量を取得する
-cascade_path = "./cascade/lbpcascade_animeface.xml"
+cascade_path = "../cascade/lbpcascade_animeface.xml"
 cascade = cv2.CascadeClassifier(cascade_path)
 
-in_img_path = "./test_imgs/face_detecting.png"
-out_img_path = "./test_imgs/face_detecting_out.png"
+overlay_img_path = "../test_imgs/face_up3.jpg"
+in_img_path = "../test_imgs/hirari-hitori-kirari/face_detecting5.png"
+out_img_path = "../test_imgs/hirari-hitori-kirari/face_detecting_out.png"
 img = cv2.imread(in_img_path)
+overlay_img = cv2.imread(overlay_img_path)
 
 color = (0, 187, 254)
 
@@ -27,5 +29,7 @@ if len(faces) > 0:
     # 検出した顔を囲む矩形の作成
     for (x, y, w, h) in faces:
         cv2.rectangle(img, (x, y), (x + w, y + h), color, thickness=7)
+        # resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
+        # img[y:y + h, x:x + w] = resized_overlay_img[:, :]
 
 cv2.imwrite(out_img_path, img)
