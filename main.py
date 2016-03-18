@@ -36,9 +36,10 @@ OVERLAY_IMG_MAP = {
 
 
 def switch_overlay_img(face_img):
-    name, hsv = detect_aikatsu_charactors['anime_based']['bgr_diff'](get_hair_color_hsv(face_img))
-    return OVERLAY_IMG_MAP[name]
-    # return cv2.imread("./test_imgs/overlays/kon.jpg", -1)
+    # name, hsv = detect_aikatsu_charactors['anime_based']['bgr_diff'](get_hair_color_hsv(face_img))
+    # return OVERLAY_IMG_MAP[name]
+    return OVERLAY_IMG_MAP[AIKATSU_NAMES[0]]
+
 
 def overlay(faces, rgb_img, cascade):
     if len(faces) <= 0:
@@ -53,9 +54,10 @@ def overlay(faces, rgb_img, cascade):
 
         overlay_img = switch_overlay_img(face_img)
         resized_overlay_img = cv2.resize(overlay_img, tuple((w, h)))
-        alpha_channel = fill_void(get_alphachannel(face_img))
-        mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
-                                   mask=alpha_channel)
+        # alpha_channel = fill_void(get_alphachannel(face_img))
+        # mask_img = cv2.bitwise_and(resized_overlay_img, resized_overlay_img,
+        #                            mask=alpha_channel)
+        mask_img = overlay_img
         for i, j in [(i, j) for i in range(h) for j in range(w)]:
             if any(mask_img[i, j]):
                 rgb_img[y + i, x + j] = mask_img[i, j]
@@ -87,9 +89,18 @@ if __name__ == '__main__':
             #     continue
             faces = cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY),
                                              scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
-            faces = faces_mgr.append(faces).get_faces()
+            # if frame_idx == 1:
+            #     faces_mgr.initialize(frame, faces)
+            #     continue
+
+            # frame, faces = faces_mgr.append(frame, faces).get()
             overlayed_frame = overlay(faces, frame, cascade)
             out.write(overlayed_frame)
+
+        # frame, faces = faces_mgr.get()
+        # frame, faces = faces_mgr.append(frame, faces).get()
+        # overlayed_frame = overlay(faces, frame, cascade)
+        # out.write(overlayed_frame)
     except:
         pass
     else:

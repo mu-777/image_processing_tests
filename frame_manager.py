@@ -50,25 +50,40 @@ class FaceManager(object):
 
 class FacesManager(object):
     def __init__(self):
+        self._front_frame = None
+        self._center_frame = None
+        self._rear_frame = None
+
         self._front_frame_faces = []
         self._center_frame_faces = []
         self._rear_frame_faces = []
 
-    def append(self, faces):
-        if len(self._front_frame_faces) == 0:
-            self._front_frame_faces = self._set_faces(faces)
-            self._center_frame_faces = self._set_faces(faces)
-            self._rear_frame_faces = self._set_faces(faces)
+    def initialize(self, frame, faces):
+        self._front_frame = frame
+        self._center_frame = frame
+        self._rear_frame = frame
+        self._front_frame_faces = self._set_faces(faces)
+        self._center_frame_faces = self._set_faces(faces)
+        self._rear_frame_faces = self._set_faces(faces)
+
+    def append(self, frame, faces):
+        if self._front_frame is None:
+            self.initialize(frame, faces)
+            return self
 
         self._front_frame_faces = self._center_frame_faces
         self._center_frame_faces = self._rear_frame_faces
         self._rear_frame_faces = self._set_faces(faces)
+
+        self._front_frame = self._center_frame
+        self._center_frame = self._rear_frame
+        self._rear_frame = frame
         return self
 
-    def get_faces(self):
+    def get(self):
         continuous_faces = self._get_continuous_faces()
         updated_faces = self._added_faces(continuous_faces)
-        return [updated_face.face for updated_face in updated_faces]
+        return self._center_frame, [updated_face.face for updated_face in updated_faces]
 
     def _set_faces(self, faces):
         ret_list = []
