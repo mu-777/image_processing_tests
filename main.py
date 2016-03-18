@@ -9,6 +9,7 @@
 
 import cv2
 from functions import check_img, is_front_face, get_alphachannel, fill_void, is_skin
+from frame_manager import FacesManager
 
 CASCADE_PATH = "./cascade/lbpcascade_animeface.xml"
 # IN_VIDEO_PATH = "./test_imgs/nanohaAs_promotion_video.mp4"
@@ -21,11 +22,9 @@ FPS = 30.0
 CHECK_IMG_FLAG = False
 
 
-def overlay(rgb_img, overlay_img, cascade):
-    faces = cascade.detectMultiScale(cv2.cvtColor(rgb_img, cv2.COLOR_BGR2GRAY),
-                                     scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
+def overlay(faces, rgb_img, overlay_img, cascade):
     if len(faces) <= 0:
-        return
+        return rgb_img
 
     for (x, y, w, h) in faces:
         face_img = rgb_img[y:y + h, x:x + w]
@@ -56,19 +55,23 @@ if __name__ == '__main__':
     out = cv2.VideoWriter(filename=OUT_VIDEO_PATH, fourcc=0,
                           fps=FPS, frameSize=FRAME_SIZE)
     frame_idx = 0
+    faces_mgr = FacesManager()
 
     # フレームごとの処理
     while cap.isOpened():
-        ret, frame = cap.read()
-        if ret is False:
-            print('false')
-            out.write(frame)
-            break
         frame_idx += 1
         if frame_idx % 50 == 0:
             print("frame : %d" % frame_idx)
 
-        overlayed_frame = overlay(frame, overlay_img, cascade)
+        ret, frame = cap.read()
+        if ret is False:
+            print('false')
+            out.write(frame)
+            continue
+        faces = cascade.detectMultiScale(cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY),
+                                         scaleFactor=1.1, minNeighbors=1, minSize=(1, 1))
+        faces = faces_mgr.append(faces).get_faces()
+        overlayed_frame = overlay(faces, frame, overlay_img, cascade)
         out.write(overlayed_frame)
 
     cap.release()

@@ -7,7 +7,7 @@ from datetime import datetime
 from PIL import Image
 
 OUT_IMG_PATH = "./test_imgs/faces/"
-CHECK_IMG_FLAG = True
+CHECK_IMG_FLAG = False
 
 
 def check_img(img, title=None, flag=False, output_path=None):
